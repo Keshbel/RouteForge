@@ -4,6 +4,9 @@ using UnityEngine.Tilemaps;
 public class GridController : MonoBehaviour
 {
     private Grid _grid;
+    private CubeController _cubeController;
+    private Camera _mainCamera;
+
     [SerializeField] private Tilemap interactiveMap;
     [SerializeField] private Tilemap pathMap;
     [SerializeField] private Tilemap terrainMap;
@@ -14,10 +17,15 @@ public class GridController : MonoBehaviour
     
     private Vector3Int _previousMousePos;
 
-    // Start is called before the first frame update
-    void Start() 
+    public void Construct(CubeController cubeController, Camera mainCamera)
     {
-        _grid = gameObject.GetComponent<Grid>();
+        _cubeController = cubeController;
+        _mainCamera = mainCamera;
+    }
+
+    private void Awake() 
+    {
+        _grid = GetComponent<Grid>();
     }
 
     // Update is called once per frame
@@ -58,9 +66,12 @@ public class GridController : MonoBehaviour
         pathMap.SetTile(position, pathTile);
             
         var pos = GetCellCenterToWorldPosition(position);
-        var pathList = AllSingleton.Instance.cubeController.currentCube.pathList;
-            
-        if (!pathList.Contains(pos)) pathList.Add(pos);
+        var currentCube = _cubeController != null ? _cubeController.CurrentCube : null;
+
+        if (currentCube != null && !currentCube.ContainsPathPoint(pos))
+        {
+            currentCube.AddPathPoint(pos);
+        }
     }
     
     public void RemovePathTile(Vector3Int position, bool isRemovingPath)
@@ -70,15 +81,23 @@ public class GridController : MonoBehaviour
         if (isRemovingPath)
         {
             var pos = GetCellCenterToWorldPosition(position);
-            var pathList = AllSingleton.Instance.cubeController.currentCube.pathList;
+            var currentCube = _cubeController != null ? _cubeController.CurrentCube : null;
 
-            if (pathList.Contains(pos)) pathList.Remove(pos);
+            if (currentCube != null)
+            {
+                currentCube.RemovePathPoint(pos);
+            }
         }
     }
 
     private Vector3Int GetMousePosition () //получаем позицию мыши в мировых координатах с помощью raycast
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (_mainCamera == null)
+        {
+            return new Vector3Int(100, 100, 100);
+        }
+
+        Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(ray, out RaycastHit hit))
             return _grid.WorldToCell(hit.point);
@@ -100,7 +119,7 @@ public class GridController : MonoBehaviour
     {
         if (terrainMap.GetTile(GetCellCenterFromWorldPosition(position)) != goalTile) return false;
         
-        cube.isGoal = true;
+        cube.MarkGoalReached();
         return true;
     }
 }

@@ -3,14 +3,19 @@ using UnityEngine;
 
 public class GameOver : MonoBehaviour
 {
-    public GameObject panel;
+    [SerializeField] private GameObject panel;
     
-    public TMP_Text textScore;
-    public TMP_Text textResult;
+    [SerializeField] private TMP_Text textScore;
+    [SerializeField] private TMP_Text textResult;
 
     public void SetText(string score, string result)
     {
         textScore.text = score;
         textResult.text = result;
+    }
+
+    public void SetVisible(bool isVisible)
+    {
+        panel.SetActive(isVisible);
     }
 }

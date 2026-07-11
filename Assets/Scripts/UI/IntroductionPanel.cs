@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class IntroductionPanel : MonoBehaviour
 {
-    public GameObject panel;
+    [SerializeField] private GameObject panel;
 
     private void Start()
     {

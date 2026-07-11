@@ -137,11 +137,27 @@ namespace RouteForge
         /// <returns>Возвращает true, если переход был выполнен.</returns>
         public bool CompleteSession()
         {
+            return CompleteSession(_completedAgents);
+        }
+
+        /// <summary>
+        /// Завершает сессию вручную с заданным количеством успешных агентов.
+        /// </summary>
+        /// <param name="completedAgents">Количество агентов, достигших цели.</param>
+        /// <returns>Возвращает true, если переход был выполнен.</returns>
+        public bool CompleteSession(int completedAgents)
+        {
             if (State == ESessionState.Completed)
             {
                 return false;
             }
 
+            if (completedAgents < 0 || completedAgents > _agentCount)
+            {
+                throw new ArgumentOutOfRangeException(nameof(completedAgents), completedAgents, "Completed agents must fit session agent count.");
+            }
+
+            _completedAgents = completedAgents;
             SetState(ESessionState.Completed);
             SessionCompleted?.Invoke(_scoringPolicy.Calculate(_completedAgents));
             return true;

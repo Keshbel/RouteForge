@@ -1,34 +1,52 @@
 using UnityEngine;
 using UnityEngine.UI;
+using RouteForge;
 
 public class AllSingleton : MonoBehaviour
 {
-    public static AllSingleton Instance;
-
     [Header("Controllers")] 
-    public GameManager gameManager;
-    public GridController gridController;
-    public CubeController cubeController;
-    public GameOver gameOver;
+    [SerializeField] private GameManager gameManager;
+    [SerializeField] private GridController gridController;
+    [SerializeField] private CubeController cubeController;
+    [SerializeField] private GameOver gameOver;
 
     [Header("UI")] 
-    public Button resetGameButton;
+    [SerializeField] private Button resetGameButton;
+
+    [Header("Scene")]
+    [SerializeField] private Camera mainCamera;
+
+    private GameCompositionRoot _compositionRoot;
 
     private void Awake()
     {
-        if (Instance != null)
+        if (!ValidateReferences())
         {
-            Destroy(gameObject);
-        }
-        else
-        {
-            Instance = this;
+            enabled = false;
+            return;
         }
 
-        if (gameManager == null)
+        _compositionRoot = new GameCompositionRoot(cubeController.CubeCount);
+        gameManager.Construct(_compositionRoot.Session, gameOver);
+        gridController.Construct(cubeController, mainCamera);
+        cubeController.Construct(gameManager, gridController, mainCamera);
+        gameManager.BeginPlanning();
+    }
+
+    private bool ValidateReferences()
+    {
+        bool isValid = gameManager != null
+            && gridController != null
+            && cubeController != null
+            && gameOver != null
+            && resetGameButton != null
+            && mainCamera != null;
+
+        if (!isValid)
         {
-            gameManager = FindObjectOfType<GameManager>();
+            Debug.LogError("Scene composition is missing required references.", this);
         }
-        resetGameButton.onClick.AddListener(gameManager.Restart);
+
+        return isValid;
     }
 }

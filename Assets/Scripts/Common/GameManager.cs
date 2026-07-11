@@ -1,37 +1,55 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using RouteForge;
 
 public class GameManager : MonoBehaviour
 {
-    public static bool IsRestarting;
+    private GameSession _session;
+    private GameOver _gameOver;
+
+    public static bool IsRestarting { get; private set; }
+
+    public void Construct(GameSession session, GameOver gameOver)
+    {
+        _session = session;
+        _gameOver = gameOver;
+        _session.SessionCompleted += ShowResult;
+    }
+
+    private void OnDestroy()
+    {
+        if (_session != null)
+        {
+            _session.SessionCompleted -= ShowResult;
+        }
+    }
+
+    public void BeginPlanning()
+    {
+        _session?.BeginPlanning();
+    }
+
+    public bool StartRunning()
+    {
+        return _session != null && _session.StartRunning();
+    }
 
     public void EndGame(int countGoal)
     {
-        var countPoints = countGoal * 50;
-        string score = String.Concat("Score = ", countPoints); 
-        string result = "";
-
-        switch (countPoints)
-        {
-            case 0:
-                result = "Try again...";
-                break;
-            case 50:
-                result = "You almost won...";
-                break;
-            case 100:
-                result = "You won!";
-                break;
-        }
-
-        AllSingleton.Instance.gameOver.SetText(score, result);
-        AllSingleton.Instance.gameOver.panel.SetActive(true);
+        _session?.CompleteSession(countGoal);
     }
 
     public void Restart()
     {
         IsRestarting = true;
         SceneManager.LoadSceneAsync(0);
+    }
+
+    private void ShowResult(ScoreResult result)
+    {
+        string score = String.Concat("Score = ", result.Score);
+        _gameOver.SetText(score, result.ResultText);
+        _gameOver.SetVisible(true);
     }
 }

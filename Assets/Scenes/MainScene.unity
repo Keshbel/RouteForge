@@ -148824,6 +148824,7 @@ MonoBehaviour:
   cubeController: {fileID: 1011978765}
   gameOver: {fileID: 295846079}
   resetGameButton: {fileID: 605335661}
+  mainCamera: {fileID: 963194226}
 --- !u!1 &1910997892
 GameObject:
   m_ObjectHideFlags: 0
