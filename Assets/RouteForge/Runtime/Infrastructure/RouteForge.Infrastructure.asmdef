@@ -1,0 +1,17 @@
+{
+    "name": "RouteForge.Infrastructure",
+    "rootNamespace": "RouteForge",
+    "references": [
+        "RouteForge.Core",
+        "RouteForge.Application"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,21 @@
+{
+    "name": "RouteForge.Editor",
+    "rootNamespace": "RouteForge",
+    "references": [
+        "RouteForge.Core",
+        "RouteForge.Application",
+        "RouteForge.Infrastructure",
+        "RouteForge.Presentation"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
