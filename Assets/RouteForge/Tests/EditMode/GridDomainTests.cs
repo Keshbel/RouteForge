@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
-namespace RouteForge.Tests
+namespace RouteForge
 {
     internal sealed class GridDomainTests
     {
