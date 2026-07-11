@@ -1,43 +1,33 @@
-# MovementAlongRoutes-Test
+# RouteForge
 
-Unity. Test task for JSC Root Code.
+Deterministic route-building puzzle and Unity architecture showcase.
 
-EN:
+RouteForge is a Unity prototype about building valid routes for multiple moving cubes. The project is being shaped from a legacy route-building test task into a small, deterministic puzzle with clearer architecture, reproducible behavior, and documentation around implementation decisions.
 
-Test task for JSC Ruth Code.
+## Project Direction
 
-Test verbatim:
+- Deterministic route generation and movement playback.
+- Route-building puzzle rules that are easy to test and reason about.
+- Minimal but complete game loop: start, pause, scoring, and completion states.
+- Unity architecture showcase with separated route data, simulation, presentation, and UI layers.
+- Historical task requirements preserved for traceability.
 
-Place the path segments on the map. Launch 2 Cubes, which must move from point A to B, along their own paths
+## Legacy Brief
 
-The player’s task is to lay out a path so that the cube moves along it and assign a path of movement
-A minimal game interface is required: pause, start, scoring, etc.
-Write in Unity, you can 3D, you can pseudo-2D Random path size The main thing is that it plays, works and does not break. No physics or real gravity is required. There should only be a working prototype. When the task will be completed, it is necessary to describe the stages and how many hours it took. Upon completion, upload the sources to git.
-You determine all vague questions for yourself in order to understand your train of thought and you need to record the stages of your work
+The original assignment is preserved in [docs/original-brief.md](docs/original-brief.md).
 
-RU:
+The current repository state has also been marked with the annotated Git tag:
 
-Тестовое задание для АО Рут Код. 
+```bash
+legacy-prototype-2022
+```
 
-Тестовое дословно:
+## Screenshots
 
-На карте разместить сегменты пути.
-Запустить 2 Кубика, которые должны двигаться от точки А до Б, по своим путям
-1) Задача игрока - разложить путь, чтобы кубик по нему двигался и назначить путь движения
-2) Необходим минимальный игровой интерфейс: пауза, старт, подсчет очков и пр.
-3) Писать на Unity, можно 3D, можно псевдо-2D
-Рандомный размер пути
-Главное, чтобы игралось, работало и не ломалось
-Никакой физики и настоящей гравитации не требуется. Должен быть только работающий прототип.
-Когда будет делать задание необходимо описать этапы и сколько часов что заняло
-По завершению залить исходники в git
+![Route building screenshot](https://user-images.githubusercontent.com/85021488/199441678-56ba9258-fde7-4221-bf44-a0dbf0e58b58.png)
 
-Все неопределенные вопросы для себя определяете самостоятельно, для того чтобы понять Ваш ход мыслей и требуется фиксация этапов Вашей работы
+![Route building screenshot](https://user-images.githubusercontent.com/85021488/199441737-2ed5e669-c0bf-45bc-9ab7-20ba0939f2a6.png)
 
-![image](https://user-images.githubusercontent.com/85021488/199441678-56ba9258-fde7-4221-bf44-a0dbf0e58b58.png)
+![Route building screenshot](https://user-images.githubusercontent.com/85021488/199441803-fc1e67c1-9689-42d7-863a-a4d885e90abf.png)
 
-![image](https://user-images.githubusercontent.com/85021488/199441737-2ed5e669-c0bf-45bc-9ab7-20ba0939f2a6.png)
-
-![image](https://user-images.githubusercontent.com/85021488/199441803-fc1e67c1-9689-42d7-863a-a4d885e90abf.png)
-
-![image](https://user-images.githubusercontent.com/85021488/199441889-63d0b2bd-42da-4ba5-8ca7-581fcd30f90e.png)
+![Route building screenshot](https://user-images.githubusercontent.com/85021488/199441889-63d0b2bd-42da-4ba5-8ca7-581fcd30f90e.png)
