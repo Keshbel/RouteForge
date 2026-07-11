@@ -21,6 +21,11 @@ namespace RouteForge
         public event Action<AgentId, Route> RouteChanged;
 
         /// <summary>
+        /// Вызывается после очистки всех маршрутов.
+        /// </summary>
+        public event Action RoutesCleared;
+
+        /// <summary>
         /// Вызывается, когда редактирование приводит к невалидному маршруту.
         /// </summary>
         public event Action<RouteValidationResult> RouteRejected;
@@ -99,6 +104,16 @@ namespace RouteForge
             }
 
             return TryCommitBuffer();
+        }
+
+        /// <summary>
+        /// Удаляет все построенные маршруты.
+        /// </summary>
+        public void ClearAll()
+        {
+            _routes.Clear();
+            _editBuffer.Clear();
+            RoutesCleared?.Invoke();
         }
 
         private void CopySelectedRouteToBuffer()
