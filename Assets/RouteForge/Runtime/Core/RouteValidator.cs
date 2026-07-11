@@ -22,80 +22,88 @@ namespace RouteForge
             BoardSnapshot board,
             IReadOnlyDictionary<AgentId, Route> committedRoutes)
         {
-            if (route == null)
+            using (RouteForgeProfilerMarker.RouteValidation.Auto())
             {
-                return RouteValidationResult.Failure(ERouteValidationError.MissingRoute, null, "Route is not provided.");
-            }
-
-            if (board == null)
-            {
-                throw new ArgumentNullException(nameof(board));
-            }
-
-            if (route.Count == 0)
-            {
-                return RouteValidationResult.Failure(ERouteValidationError.EmptyRoute, null, "Route contains no cells.");
-            }
-
-            if (!board.TryGetStart(agentId, out GridPosition start))
-            {
-                return RouteValidationResult.Failure(ERouteValidationError.MissingStart, null, "Agent start is not configured.");
-            }
-
-            if (!board.TryGetGoal(agentId, out GridPosition goal))
-            {
-                return RouteValidationResult.Failure(ERouteValidationError.MissingGoal, null, "Agent goal is not configured.");
-            }
-
-            GridPosition firstCell = route[0];
-            if (firstCell != start && !firstCell.IsAdjacentTo(start))
-            {
-                return RouteValidationResult.Failure(ERouteValidationError.InvalidStart, firstCell, "Route does not start near the agent.");
-            }
-
-            var visited = new HashSet<GridPosition>();
-            bool containsGoal = false;
-            for (int i = 0; i < route.Count; i++)
-            {
-                GridPosition cell = route[i];
-                if (!board.Bounds.Contains(cell))
+                if (route == null)
                 {
-                    return RouteValidationResult.Failure(ERouteValidationError.OutOfBounds, cell, "Route contains a cell outside board bounds.");
+                    return RouteValidationResult.Failure(ERouteValidationError.MissingRoute, null, "Route is not provided.");
                 }
 
-                if (board.IsBlocked(cell))
+                if (board == null)
                 {
-                    return RouteValidationResult.Failure(ERouteValidationError.BlockedCell, cell, "Route contains a blocked cell.");
+                    throw new ArgumentNullException(nameof(board));
                 }
 
-                if (i > 0 && !route[i - 1].IsAdjacentTo(cell))
+                if (route.Count == 0)
                 {
-                    return RouteValidationResult.Failure(ERouteValidationError.NonAdjacentSegment, cell, "Route contains non-adjacent cells.");
+                    return RouteValidationResult.Failure(ERouteValidationError.EmptyRoute, null, "Route contains no cells.");
                 }
 
-                if (!visited.Add(cell))
+                if (!board.TryGetStart(agentId, out GridPosition start))
                 {
-                    return RouteValidationResult.Failure(ERouteValidationError.Cycle, cell, "Route visits the same cell twice.");
+                    return RouteValidationResult.Failure(ERouteValidationError.MissingStart, null, "Agent start is not configured.");
                 }
 
-                if (cell == goal)
+                if (!board.TryGetGoal(agentId, out GridPosition goal))
                 {
-                    containsGoal = true;
+                    return RouteValidationResult.Failure(ERouteValidationError.MissingGoal, null, "Agent goal is not configured.");
                 }
+
+                GridPosition firstCell = route[0];
+                if (firstCell != start)
+                {
+                    return RouteValidationResult.Failure(ERouteValidationError.InvalidStart, firstCell, "Route does not start at the agent.");
+                }
+
+                var visited = new HashSet<GridPosition>();
+                bool containsGoal = false;
+                for (int i = 0; i < route.Count; i++)
+                {
+                    GridPosition cell = route[i];
+                    if (!board.Bounds.Contains(cell))
+                    {
+                        return RouteValidationResult.Failure(ERouteValidationError.OutOfBounds, cell, "Route contains a cell outside board bounds.");
+                    }
+
+                    if (board.IsBlocked(cell))
+                    {
+                        return RouteValidationResult.Failure(ERouteValidationError.BlockedCell, cell, "Route contains a blocked cell.");
+                    }
+
+                    if (i > 0 && !route[i - 1].IsAdjacentTo(cell))
+                    {
+                        return RouteValidationResult.Failure(ERouteValidationError.NonAdjacentSegment, cell, "Route contains non-adjacent cells.");
+                    }
+
+                    if (!visited.Add(cell))
+                    {
+                        return RouteValidationResult.Failure(ERouteValidationError.Cycle, cell, "Route visits the same cell twice.");
+                    }
+
+                    if (board.IsGoalForOtherAgent(agentId, cell))
+                    {
+                        return RouteValidationResult.Failure(ERouteValidationError.ForeignGoal, cell, "Route contains another agent goal.");
+                    }
+
+                    if (cell == goal)
+                    {
+                        containsGoal = true;
+                    }
+                }
+
+                if (!containsGoal)
+                {
+                    return RouteValidationResult.Failure(ERouteValidationError.MissingTarget, goal, "Route does not include the agent goal.");
+                }
+
+                RouteValidationResult conflictResult = ValidateConflicts(agentId, route, committedRoutes);
+                if (!conflictResult.IsValid)
+                {
+                    return conflictResult;
+                }
+
+                return RouteValidationResult.Success;
             }
-
-            if (!containsGoal)
-            {
-                return RouteValidationResult.Failure(ERouteValidationError.MissingTarget, goal, "Route does not include the agent goal.");
-            }
-
-            RouteValidationResult conflictResult = ValidateConflicts(agentId, route, committedRoutes);
-            if (!conflictResult.IsValid)
-            {
-                return conflictResult;
-            }
-
-            return RouteValidationResult.Success;
         }
 
         private static RouteValidationResult ValidateConflicts(

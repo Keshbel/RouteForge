@@ -94,5 +94,24 @@ namespace RouteForge
         {
             return _agentGoals.TryGetValue(agentId, out GridPosition goal) && goal == position;
         }
+
+        /// <summary>
+        /// Проверяет, является ли клетка целью другого агента.
+        /// </summary>
+        /// <param name="agentId">Агент, для которого проверяется маршрут.</param>
+        /// <param name="position">Проверяемая клетка.</param>
+        /// <returns>Возвращает true, если клетка принадлежит цели другого агента.</returns>
+        public bool IsGoalForOtherAgent(AgentId agentId, GridPosition position)
+        {
+            foreach (KeyValuePair<AgentId, GridPosition> pair in _agentGoals)
+            {
+                if (pair.Key != agentId && pair.Value == position)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

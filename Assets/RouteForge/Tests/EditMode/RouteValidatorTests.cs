@@ -5,164 +5,137 @@ namespace RouteForge
 {
     internal sealed class RouteValidatorTests
     {
-        private readonly AgentId _agentA = new AgentId(0);
-        private readonly AgentId _agentB = new AgentId(1);
-        private readonly RouteValidator _validator = new RouteValidator();
-
         [Test]
-        public void Validate_AdjacentRouteWithGoal_ReturnsSuccess()
+        public void Validate_EmptyRoute_ReturnsEmptyRouteError()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(1, 0),
-                new GridPosition(2, 0)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default().Build();
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoard(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, Route.Empty, board, null);
 
-            Assert.That(result.IsValid, Is.True);
+            // Assert
+            Assert.That(result.Error, Is.EqualTo(ERouteValidationError.EmptyRoute));
         }
 
         [Test]
-        public void Validate_FirstCellFarFromStart_ReturnsInvalidStart()
+        public void Validate_RouteDoesNotStartAtAgent_ReturnsInvalidStart()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(2, 1),
-                new GridPosition(2, 0)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default().Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((1, 0), (2, 0));
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoard(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
 
+            // Assert
             Assert.That(result.Error, Is.EqualTo(ERouteValidationError.InvalidStart));
         }
 
         [Test]
-        public void Validate_NonAdjacentSegment_ReturnsNonAdjacentSegment()
+        public void Validate_NonAdjacentCells_ReturnsNonAdjacentSegment()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(1, 0),
-                new GridPosition(2, 2)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default().Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (2, 0));
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoard(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
 
+            // Assert
             Assert.That(result.Error, Is.EqualTo(ERouteValidationError.NonAdjacentSegment));
         }
 
         [Test]
         public void Validate_BlockedCell_ReturnsBlockedCell()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(0, 1),
-                new GridPosition(1, 1),
-                new GridPosition(2, 1),
-                new GridPosition(2, 0)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default()
+                .WithBlocked((1, 0))
+                .Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (1, 0), (2, 0));
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoard(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
 
+            // Assert
             Assert.That(result.Error, Is.EqualTo(ERouteValidationError.BlockedCell));
         }
 
         [Test]
-        public void Validate_RepeatedCell_ReturnsCycle()
+        public void Validate_RepeatedCellWhenLoopsDisabled_ReturnsCycle()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(1, 0),
-                new GridPosition(1, 1),
-                new GridPosition(0, 1),
-                new GridPosition(1, 1),
-                new GridPosition(2, 1),
-                new GridPosition(2, 0)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default()
+                .WithGoal(RouteTestBoardBuilder.AgentA, (2, 0))
+                .Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (1, 0), (1, 1), (1, 0), (2, 0));
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoardWithoutBlockedCells(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
 
+            // Assert
             Assert.That(result.Error, Is.EqualTo(ERouteValidationError.Cycle));
         }
 
         [Test]
-        public void Validate_MissingGoal_ReturnsMissingTarget()
+        public void Validate_ContinuousRouteToCorrectGoal_ReturnsSuccess()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(1, 0),
-                new GridPosition(1, 1)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default().Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (1, 0), (2, 0));
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoard(), null);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
 
-            Assert.That(result.Error, Is.EqualTo(ERouteValidationError.MissingTarget));
+            // Assert
+            Assert.That(result.IsValid, Is.True);
         }
 
         [Test]
-        public void Validate_CellOwnedByOtherRoute_ReturnsRouteConflict()
+        public void Validate_RouteContainsAnotherAgentsGoal_ReturnsForeignGoal()
         {
-            Route route = Route.Create(new[]
-            {
-                new GridPosition(1, 0),
-                new GridPosition(2, 0)
-            });
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default()
+                .WithGoal(RouteTestBoardBuilder.AgentA, (3, 0))
+                .WithGoal(RouteTestBoardBuilder.AgentB, (1, 0))
+                .Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (1, 0), (2, 0), (3, 0));
+
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, null);
+
+            // Assert
+            Assert.That(result.Error, Is.EqualTo(ERouteValidationError.ForeignGoal));
+        }
+
+        [Test]
+        public void Validate_SharedExclusiveCell_ReturnsRouteConflict()
+        {
+            // Arrange
+            RouteValidator validator = new RouteValidator();
+            BoardSnapshot board = RouteTestBoardBuilder.Default()
+                .WithGoal(RouteTestBoardBuilder.AgentA, (2, 0))
+                .WithGoal(RouteTestBoardBuilder.AgentB, (4, 4))
+                .Build();
+            Route route = RouteTestBoardBuilder.RouteFrom((0, 0), (1, 0), (2, 0));
             var committedRoutes = new Dictionary<AgentId, Route>
             {
-                {
-                    _agentB,
-                    Route.Create(new[]
-                    {
-                        new GridPosition(4, 4),
-                        new GridPosition(3, 4),
-                        new GridPosition(2, 4),
-                        new GridPosition(2, 3),
-                        new GridPosition(2, 2),
-                        new GridPosition(2, 1),
-                        new GridPosition(2, 0)
-                    })
-                }
+                { RouteTestBoardBuilder.AgentB, RouteTestBoardBuilder.RouteFrom((4, 4), (3, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0)) }
             };
 
-            RouteValidationResult result = _validator.Validate(_agentA, route, CreateBoardWithoutBlockedCells(), committedRoutes);
+            // Act
+            RouteValidationResult result = validator.Validate(RouteTestBoardBuilder.AgentA, route, board, committedRoutes);
 
+            // Assert
             Assert.That(result.Error, Is.EqualTo(ERouteValidationError.RouteConflict));
-        }
-
-        private BoardSnapshot CreateBoard()
-        {
-            return new BoardSnapshot(
-                new BoardBounds(0, 0, 5, 5),
-                new[] { new GridPosition(1, 1) },
-                CreateStarts(),
-                CreateGoals());
-        }
-
-        private BoardSnapshot CreateBoardWithoutBlockedCells()
-        {
-            return new BoardSnapshot(
-                new BoardBounds(0, 0, 5, 5),
-                null,
-                CreateStarts(),
-                CreateGoals());
-        }
-
-        private Dictionary<AgentId, GridPosition> CreateStarts()
-        {
-            return new Dictionary<AgentId, GridPosition>
-            {
-                { _agentA, new GridPosition(0, 0) },
-                { _agentB, new GridPosition(4, 4) }
-            };
-        }
-
-        private Dictionary<AgentId, GridPosition> CreateGoals()
-        {
-            return new Dictionary<AgentId, GridPosition>
-            {
-                { _agentA, new GridPosition(2, 0) },
-                { _agentB, new GridPosition(0, 4) }
-            };
         }
     }
 }

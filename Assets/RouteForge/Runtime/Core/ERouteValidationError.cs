@@ -63,6 +63,11 @@ namespace RouteForge
         /// <summary>
         /// Маршрут пересекается с маршрутом другого агента.
         /// </summary>
-        RouteConflict = 11
+        RouteConflict = 11,
+
+        /// <summary>
+        /// Маршрут проходит через цель другого агента.
+        /// </summary>
+        ForeignGoal = 12
     }
 }
