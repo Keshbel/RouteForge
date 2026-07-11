@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class CubeController : MonoBehaviour
 {
+    private static readonly Vector3 CameraPivot = new Vector3(0f, 0f, 0f);
+
     [Space]
     [SerializeField] private Cube currentCube;
     [Space]
@@ -76,8 +78,8 @@ public class CubeController : MonoBehaviour
             return;
         }
 
-        _mainCamera.transform.RotateAround(Vector3.zero, Vector3.up, 180);
-        currentCube = cubes.Find(cube => cube != currentCube);
+        _mainCamera.transform.RotateAround(CameraPivot, Vector3.up, 180);
+        currentCube = FindNextCube();
 
         foreach (var cube in cubes)
         {
@@ -96,5 +98,18 @@ public class CubeController : MonoBehaviour
         {
             cube.StartMove();
         }
+    }
+
+    private Cube FindNextCube()
+    {
+        for (int i = 0; i < cubes.Count; i++)
+        {
+            if (cubes[i] != currentCube)
+            {
+                return cubes[i];
+            }
+        }
+
+        return currentCube;
     }
 }

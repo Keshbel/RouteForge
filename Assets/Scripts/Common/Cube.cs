@@ -69,27 +69,28 @@ public class Cube : MonoBehaviour
             yield break;
         }
 
-        var pathListCount = pathList.Count;
+        int pathListCount = pathList.Count;
 
         for (int i = 0; i < pathListCount; i++)
         {
-            var pathStep = pathList.Find(path => Vector3.Distance(transform.position, path) < 10);
+            int pathStepIndex = FindNextPathStepIndex(transform.position);
 
-            if (pathStep != Vector3.zero)
+            if (pathStepIndex >= 0)
             {
-                var distance = Vector3.Distance(transform.position, pathStep);
-                var time = distance / Speed;
+                Vector3 pathStep = pathList[pathStepIndex];
+                float distance = Vector3.Distance(transform.position, pathStep);
+                float time = distance / Speed;
 
                 yield return MoveStep(pathStep, time);
 
                 _gridController.RemovePathTile(_gridController.GetCellCenterFromWorldPosition(pathStep), true);
-                pathList.Remove(pathStep);
+                pathList.RemoveAt(pathStepIndex);
 
                 if (_gridController.CheckGoal(pathStep, this))
                 {
-                    foreach (var path in pathList)
+                    for (int j = 0; j < pathList.Count; j++)
                     {
-                        _gridController.RemovePathTile(_gridController.GetCellCenterFromWorldPosition(path), false);
+                        _gridController.RemovePathTile(_gridController.GetCellCenterFromWorldPosition(pathList[j]), false);
                     }
 
                     pathList.Clear();
@@ -101,6 +102,21 @@ public class Cube : MonoBehaviour
 
         _isFail = true;
         MovementEnded?.Invoke(this);
+    }
+
+    private int FindNextPathStepIndex(Vector3 origin)
+    {
+        const float MaxStepDistanceSqr = 100f;
+
+        for (int i = 0; i < pathList.Count; i++)
+        {
+            if ((origin - pathList[i]).sqrMagnitude < MaxStepDistanceSqr)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public void StartMove()
