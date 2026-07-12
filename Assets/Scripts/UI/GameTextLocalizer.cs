@@ -9,6 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class GameTextLocalizer : MonoBehaviour
 {
+    private const string SavedLanguageKey = "Game.Language";
     private const string EnglishLanguageToggleLabel = "EN";
     private const string RussianLanguageToggleLabel = "RU";
     private const string DescriptionTextName = "Description_Text";
@@ -126,6 +127,7 @@ public sealed class GameTextLocalizer : MonoBehaviour
     {
         useSystemLanguage = false;
         language = nextLanguage;
+        SaveLanguage();
         ApplyStaticTexts();
     }
 
@@ -357,6 +359,14 @@ public sealed class GameTextLocalizer : MonoBehaviour
 
     private void ResolveInitialLanguage()
     {
+        if (TryLoadSavedLanguage(out EGameLanguage savedLanguage))
+        {
+            language = savedLanguage;
+            useSystemLanguage = false;
+            SyncLeanLocalizationLanguage();
+            return;
+        }
+
         if (!useSystemLanguage)
         {
             SyncLeanLocalizationLanguage();
@@ -367,6 +377,31 @@ public sealed class GameTextLocalizer : MonoBehaviour
             ? EGameLanguage.Russian
             : EGameLanguage.English;
         SyncLeanLocalizationLanguage();
+    }
+
+    private static bool TryLoadSavedLanguage(out EGameLanguage savedLanguage)
+    {
+        savedLanguage = default;
+
+        if (!PlayerPrefs.HasKey(SavedLanguageKey))
+        {
+            return false;
+        }
+
+        int value = PlayerPrefs.GetInt(SavedLanguageKey);
+        if (!Enum.IsDefined(typeof(EGameLanguage), value))
+        {
+            return false;
+        }
+
+        savedLanguage = (EGameLanguage)value;
+        return true;
+    }
+
+    private void SaveLanguage()
+    {
+        PlayerPrefs.SetInt(SavedLanguageKey, (int)language);
+        PlayerPrefs.Save();
     }
 
     private void SyncLeanLocalizationLanguage()
