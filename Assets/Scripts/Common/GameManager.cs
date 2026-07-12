@@ -7,13 +7,15 @@ public class GameManager : MonoBehaviour
 {
     private GameSession _session;
     private GameOver _gameOver;
+    private GameTextLocalizer _textLocalizer;
 
     public static bool IsRestarting { get; private set; }
 
-    public void Construct(GameSession session, GameOver gameOver)
+    public void Construct(GameSession session, GameOver gameOver, GameTextLocalizer textLocalizer)
     {
         _session = session;
         _gameOver = gameOver;
+        _textLocalizer = textLocalizer;
         _session.SessionCompleted += ShowResult;
     }
 
@@ -48,8 +50,14 @@ public class GameManager : MonoBehaviour
 
     private void ShowResult(ScoreResult result)
     {
-        string score = String.Concat("Score = ", result.Score);
-        _gameOver.SetText(score, result.ResultText);
+        string score = _textLocalizer != null
+            ? _textLocalizer.FormatScore(result.Score)
+            : String.Concat("Score: ", result.Score);
+        string resultText = _textLocalizer != null
+            ? _textLocalizer.LocalizeResult(result.ResultText)
+            : result.ResultText;
+
+        _gameOver.SetText(score, resultText);
         _gameOver.SetVisible(true);
     }
 }

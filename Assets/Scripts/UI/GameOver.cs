@@ -10,12 +10,22 @@ public class GameOver : MonoBehaviour
 
     public void SetText(string score, string result)
     {
-        textScore.text = score;
-        textResult.text = result;
+        if (textScore != null)
+        {
+            textScore.text = score;
+        }
+
+        if (textResult != null)
+        {
+            textResult.text = result;
+        }
     }
 
     public void SetVisible(bool isVisible)
     {
-        panel.SetActive(isVisible);
+        if (panel != null)
+        {
+            panel.SetActive(isVisible);
+        }
     }
 }

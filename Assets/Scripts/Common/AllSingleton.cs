@@ -9,6 +9,7 @@ public class AllSingleton : MonoBehaviour
     [SerializeField] private GridController gridController;
     [SerializeField] private CubeController cubeController;
     [SerializeField] private GameOver gameOver;
+    [SerializeField] private GameTextLocalizer textLocalizer;
 
     [Header("UI")] 
     [SerializeField] private Button resetGameButton;
@@ -27,7 +28,7 @@ public class AllSingleton : MonoBehaviour
         }
 
         _compositionRoot = new GameCompositionRoot(cubeController.CubeCount);
-        gameManager.Construct(_compositionRoot.Session, gameOver);
+        gameManager.Construct(_compositionRoot.Session, gameOver, textLocalizer);
         gridController.Construct(cubeController, mainCamera);
         cubeController.Construct(gameManager, gridController, mainCamera);
         gameManager.BeginPlanning();
