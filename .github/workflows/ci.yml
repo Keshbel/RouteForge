@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unity-${{ matrix.testMode }}-test-results
           path: artifacts/${{ matrix.testMode }}
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unity-${{ matrix.testMode }}-coverage
           path: CodeCoverage
@@ -156,7 +156,7 @@ jobs:
 
       - name: Upload smoke build
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-build-StandaloneWindows64
           path: build/smoke
