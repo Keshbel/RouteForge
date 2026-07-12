@@ -166,7 +166,7 @@ jobs:
           lfs: true
 
       - name: Download builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: RouteForge-*
           path: release-dist
