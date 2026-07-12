@@ -63,14 +63,13 @@ public class GridController : MonoBehaviour
     
     private void AddPathTile(Vector3Int position)
     {
-        pathMap.SetTile(position, pathTile);
-            
         var pos = GetCellCenterToWorldPosition(position);
         var currentCube = _cubeController != null ? _cubeController.CurrentCube : null;
 
-        if (currentCube != null && !currentCube.ContainsPathPoint(pos))
+        if (currentCube != null && !currentCube.ContainsPathPoint(pos) && currentCube.CanAppendPathPoint(pos))
         {
             currentCube.AddPathPoint(pos);
+            pathMap.SetTile(position, pathTile);
         }
     }
     

@@ -6,12 +6,16 @@ using UnityEngine;
 
 public class Cube : MonoBehaviour
 {
-    [SerializeField] private List<Vector3> pathList = new List<Vector3>();
+    private const float MinMoveDistanceSqr = 0.0001f;
 
-    private const float Speed = 5f;
+    [SerializeField] private List<Vector3> pathList = new List<Vector3>();
+    [SerializeField, Min(0.1f)] private float movementSpeed = 5f;
+    [SerializeField, Min(0f)] private float movementHeight = 2f;
+    [SerializeField, Range(0f, 180f)] private float rollAngle = 90f;
 
     private GridController _gridController;
     private Tweener _moveTween;
+    private Tweener _rotationTween;
     private bool _isGoal;
     private bool _isFail;
 
@@ -36,6 +40,27 @@ public class Cube : MonoBehaviour
         pathList.Add(point);
     }
 
+    /// <summary>
+    /// Проверяет, можно ли добавить точку пути без диагонального или пропущенного шага.
+    /// </summary>
+    /// <param name="point">Мировая позиция центра клетки, которую нужно добавить в путь.</param>
+    /// <returns>True, если клетка совпадает с опорной клеткой или находится рядом по прямой.</returns>
+    public bool CanAppendPathPoint(Vector3 point)
+    {
+        if (_gridController == null)
+        {
+            Debug.LogError("Cube path validation requires GridController dependency.", this);
+            return false;
+        }
+
+        Vector3Int pointCell = _gridController.GetCellCenterFromWorldPosition(point);
+        Vector3Int referenceCell = pathList.Count > 0
+            ? _gridController.GetCellCenterFromWorldPosition(pathList[pathList.Count - 1])
+            : _gridController.GetCellCenterFromWorldPosition(transform.position);
+
+        return IsSameOrOrthogonalNeighbor(referenceCell, pointCell);
+    }
+
     public void RemovePathPoint(Vector3 point)
     {
         pathList.Remove(point);
@@ -48,10 +73,20 @@ public class Cube : MonoBehaviour
 
     private IEnumerator MoveStep(Vector3 toPosition, float time)
     {
-        var toPositionNew = new Vector3(toPosition.x, 2, toPosition.z);
+        Vector3 targetPosition = new Vector3(toPosition.x, movementHeight, toPosition.z);
+        Vector3 moveDirection = targetPosition - transform.position;
+        moveDirection.y = 0f;
 
         _moveTween?.Kill();
-        _moveTween = transform.DOMove(toPositionNew, time).SetEase(Ease.InOutCubic);
+        _rotationTween?.Kill();
+
+        _moveTween = transform.DOMove(targetPosition, time).SetEase(Ease.InOutCubic);
+        if (moveDirection.sqrMagnitude > MinMoveDistanceSqr && rollAngle > 0f)
+        {
+            Vector3 rollAxis = Vector3.Cross(Vector3.up, moveDirection.normalized);
+            Quaternion targetRotation = Quaternion.AngleAxis(rollAngle, rollAxis) * transform.rotation;
+            _rotationTween = transform.DORotateQuaternion(targetRotation, time).SetEase(Ease.InOutCubic);
+        }
 
         yield return _moveTween.WaitForCompletion();
     }
@@ -79,11 +114,11 @@ public class Cube : MonoBehaviour
             {
                 Vector3 pathStep = pathList[pathStepIndex];
                 float distance = Vector3.Distance(transform.position, pathStep);
-                float time = distance / Speed;
+                float time = movementSpeed > 0f ? distance / movementSpeed : 0f;
 
                 yield return MoveStep(pathStep, time);
 
-                _gridController.RemovePathTile(_gridController.GetCellCenterFromWorldPosition(pathStep), true);
+                _gridController.RemovePathTile(_gridController.GetCellCenterFromWorldPosition(pathStep), false);
                 pathList.RemoveAt(pathStepIndex);
 
                 if (_gridController.CheckGoal(pathStep, this))
@@ -106,11 +141,12 @@ public class Cube : MonoBehaviour
 
     private int FindNextPathStepIndex(Vector3 origin)
     {
-        const float MaxStepDistanceSqr = 100f;
+        Vector3Int originCell = _gridController.GetCellCenterFromWorldPosition(origin);
 
         for (int i = 0; i < pathList.Count; i++)
         {
-            if ((origin - pathList[i]).sqrMagnitude < MaxStepDistanceSqr)
+            Vector3Int pathCell = _gridController.GetCellCenterFromWorldPosition(pathList[i]);
+            if (IsSameOrOrthogonalNeighbor(originCell, pathCell))
             {
                 return i;
             }
@@ -119,9 +155,31 @@ public class Cube : MonoBehaviour
         return -1;
     }
 
+    private static bool AreOrthogonalNeighbors(Vector3Int first, Vector3Int second)
+    {
+        int xDistance = Mathf.Abs(first.x - second.x);
+        int yDistance = Mathf.Abs(first.y - second.y);
+        int zDistance = Mathf.Abs(first.z - second.z);
+
+        return xDistance + yDistance + zDistance == 1;
+    }
+
+    private static bool IsSameOrOrthogonalNeighbor(Vector3Int first, Vector3Int second)
+    {
+        return first == second || AreOrthogonalNeighbors(first, second);
+    }
+
     public void StartMove()
     {
         StopAllCoroutines();
+        _moveTween?.Kill();
+        _rotationTween?.Kill();
         StartCoroutine(MoveAllPath());
+    }
+
+    private void OnDestroy()
+    {
+        _moveTween?.Kill();
+        _rotationTween?.Kill();
     }
 }
