@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.testMode }}-test-results
           path: artifacts/${{ matrix.testMode }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.testMode }}-coverage
           path: CodeCoverage
@@ -146,7 +146,7 @@ jobs:
           zip -r "../../dist/RouteForge-${GITHUB_REF_NAME}-${{ matrix.targetPlatform }}.zip" .
 
       - name: Upload packaged build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RouteForge-${{ matrix.targetPlatform }}
           path: dist/*.zip
